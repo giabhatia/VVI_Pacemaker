@@ -1,0 +1,46 @@
+/*
+simulating a VVI pacemaker via arduino
+serial plotter output config via this video: https://www.youtube.com/watch?v=uYnaEBqN0Z4
+*/
+
+
+#define pinIn  7   // Sensed input from heart (555 astable)
+#define pinOut 3   // Output to pacing (monostable or LED)
+
+
+const unsigned long intervalThresholdMs = 750; // 80 bpm
+unsigned long lastBeatTime = 0;
+
+
+void setup() {
+ pinMode(pinIn, INPUT);
+ pinMode(pinOut, OUTPUT);
+ digitalWrite(pinOut, HIGH); // idle state
+ Serial.begin(9600);
+ delay(3000); // give time to settle
+}
+
+
+void loop() {
+ // Check if we sense a heartbeat (LOW pulse from 555)
+ if (digitalRead(pinIn) == HIGH) {
+   lastBeatTime = millis(); // Beat detected, inhibit pacing
+   //Serial.println("Beat sensed.");
+   delay(10); // debounce
+ }
+
+
+ // If too much time has passed without a beat, pace
+ if (millis() - lastBeatTime > intervalThresholdMs) {
+   //Serial.println("Pacing triggered.");
+   digitalWrite(pinOut, LOW); // send pacing spike
+   delay(10);
+   digitalWrite(pinOut, HIGH); // return to idle
+   lastBeatTime = millis(); // reset timing
+ }
+ int val = analogRead(A0);
+ Serial.println(val);
+ int sensorVal = analogRead(A4);
+ Serial.println(sensorVal);
+ delay(200); //to ignore any pacing
+}
